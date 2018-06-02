@@ -1,0 +1,37 @@
+---
+- name: BNAS 02 module
+  hosts: all
+  tasks:
+
+  - name: Test reachability to Ansible host
+    ios_ping:
+      dest: 10.10.10.254
+
+  - name: Gather facts with ios_facts
+    ios_facts:
+      gather_subset:
+        - "!config"
+    register: ios_result
+
+  - name: Gather facts with napalm_get_facts
+    napalm_get_facts:
+      username: "{{ansible_user}}"
+      password: "{{ansible_ssh_pass}}"
+      dev_os: "{{ansible_network_os}}"
+      hostname: "{{ansible_host}}"
+      timeout: 60
+      filter:
+        - facts
+        - interfaces_ip
+    register: napalm_result
+
+  - name: Create CSV file
+    lineinfile:
+      path: ./report.csv
+      create: yes
+      line: 'hostname;serial;version;uptime'
+
+  - name: Add data rows
+    lineinfile:
+      path: ./report.csv
+      line: "{{ios_result.ansible_facts.ansible_net_hostname}};{{ios_result.ansible_facts.ansible_net_serialnum}};{{ios_result.ansible_facts.ansible_net_version}};{{napalm_result.ansible_facts.napalm_uptime}}"
