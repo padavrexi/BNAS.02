@@ -1,8 +1,6 @@
 ---
 - name: BNAS 02 module
   hosts: all
-  vars:
-     time: "{{ lookup('pipe', 'date +\"%Y%m%d_%H%M%S\"') }}"
   tasks:
 
   - name: Test reachability to Ansible host
@@ -26,6 +24,12 @@
         - facts
         - interfaces_ip
     register: napalm_result
+
+  - name: Get current date/time
+    run_once: true
+    delegate_to: localhost
+    set_fact:
+      time: "{{ lookup('pipe', 'date +\"%Y%m%d_%H%M%S\"') }}"
 
   - name: Create new CSV file
     run_once: true
