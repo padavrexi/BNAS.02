@@ -1,6 +1,8 @@
 ---
 - name: BNAS 02 module
   hosts: all
+  vars:
+     time: "{{ lookup('pipe', 'date +\"%Y%m%d_%H%M%S\"') }}"
   tasks:
 
   - name: Test reachability to Ansible host
@@ -25,13 +27,15 @@
         - interfaces_ip
     register: napalm_result
 
-  - name: Create CSV file
+  - name: Create new CSV file
+    run_once: true
+    delegate_to: localhost
     lineinfile:
-      path: ./report.csv
+      path: "./reports/{{time}}.csv"
       create: yes
       line: 'hostname;serial;version;uptime'
 
   - name: Add data rows
     lineinfile:
-      path: ./report.csv
+      path: "./reports/{{time}}.csv"
       line: "{{ios_result.ansible_facts.ansible_net_hostname}};{{ios_result.ansible_facts.ansible_net_serialnum}};{{ios_result.ansible_facts.ansible_net_version}};{{napalm_result.ansible_facts.napalm_uptime}}"
